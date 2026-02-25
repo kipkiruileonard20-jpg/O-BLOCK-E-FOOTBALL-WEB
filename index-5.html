@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>O BLOCK E FOOTBALL | ESPORTS ARENA</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <!--  LANDING PAGE / INTRO SCREEN                   -->
+  <!-- ═══════════════════════════════════════════════ -->
+  <div id="landing-page">
+    <div class="landing-bg">
+      <div class="grid-overlay"></div>
+      <div class="scanline"></div>
+
+      <!-- Floating particles -->
+      <div class="particles" id="particles"></div>
+
+      <!-- Glowing orbs -->
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+      <div class="orb orb-3"></div>
+    </div>
+
+    <div class="landing-content">
+      <div class="landing-badge">⚡ SEASON 2025 LIVE</div>
+
+      <div class="landing-logo">
+        <div class="logo-line-top"></div>
+        <div class="logo-main">
+          <span class="logo-o">O</span>
+          <span class="logo-block">BLOCK</span>
+        </div>
+        <div class="logo-sub">
+          <span class="logo-e">E</span>
+          <span class="logo-football">FOOTBALL</span>
+        </div>
+        <div class="logo-line-bottom"></div>
+      </div>
+
+      <p class="landing-tagline">COMPETE. DOMINATE. CONQUER.</p>
+      <p class="landing-desc">The ultimate real-time esports football arena. Track live scores, climb the leaderboard, and claim your glory.</p>
+
+      <button class="btn-enter" id="btn-enter" onclick="enterArena()">
+        <span class="btn-enter-glow"></span>
+        <span class="btn-enter-text">⚡ ENTER ARENA</span>
+      </button>
+
+      <div class="landing-stats">
+        <div class="stat-item">
+          <span class="stat-num" id="stat-players">—</span>
+          <span class="stat-label">PLAYERS</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-num" id="stat-matches">—</span>
+          <span class="stat-label">MATCHES</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-num" id="stat-goals">—</span>
+          <span class="stat-label">GOALS</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <!--  MAIN APP                                      -->
+  <!-- ═══════════════════════════════════════════════ -->
+  <div id="main-app" class="hidden">
+
+    <!-- TOP NAVIGATION -->
+    <nav class="navbar">
+      <div class="nav-logo">
+        <span class="nav-logo-text">O BLOCK <span class="accent">E FOOTBALL</span></span>
+        <div class="nav-logo-dot"></div>
+        <span class="live-badge">● LIVE</span>
+      </div>
+      <div class="nav-actions">
+        <div id="auth-status" class="auth-status">
+          <span id="user-email-display" class="user-email hidden"></span>
+          <button class="btn-nav btn-login" id="btn-login-nav" onclick="openAuthModal()">LOGIN</button>
+          <button class="btn-nav btn-logout hidden" id="btn-logout-nav" onclick="logoutUser()">LOGOUT</button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- HERO STRIP -->
+    <div class="hero-strip">
+      <div class="hero-strip-content">
+        <div class="ticker-wrap">
+          <div class="ticker-text" id="ticker-text">⚡ LIVE SCORES UPDATING IN REAL TIME &nbsp;&nbsp;&nbsp; 🏆 O BLOCK E FOOTBALL ARENA &nbsp;&nbsp;&nbsp; 🔥 SEASON 2025 IS LIVE &nbsp;&nbsp;&nbsp; ⚽ REGISTER NOW TO COMPETE &nbsp;&nbsp;&nbsp;</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN GRID LAYOUT -->
+    <div class="app-grid">
+
+      <!-- LEFT COLUMN: Register + Admin -->
+      <aside class="left-panel">
+
+        <!-- PLAYER REGISTRATION CARD -->
+        <div class="card glass-card register-card">
+          <div class="card-header">
+            <div class="card-icon">⚽</div>
+            <div>
+              <h2 class="card-title">JOIN THE ARENA</h2>
+              <p class="card-subtitle">REGISTER AS A PLAYER</p>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label class="form-label">FULL NAME</label>
+              <input type="text" id="player-name-input" class="form-input" placeholder="Enter your full name..." maxlength="40" autocomplete="off" />
+            </div>
+            <button class="btn-primary btn-full" id="btn-register" onclick="registerPlayer()">
+              <span>⚡ REGISTER PLAYER</span>
+            </button>
+            <div id="register-msg" class="form-msg hidden"></div>
+          </div>
+        </div>
+
+        <!-- ADMIN AUTH CARD -->
+        <div class="card glass-card admin-auth-card" id="admin-auth-card">
+          <div class="card-header">
+            <div class="card-icon">🛡️</div>
+            <div>
+              <h2 class="card-title">ADMIN ACCESS</h2>
+              <p class="card-subtitle">SECURE CONTROL PANEL</p>
+            </div>
+          </div>
+          <div class="card-body" id="admin-panel-content">
+            <!-- Shown when NOT logged in -->
+            <div id="admin-login-prompt">
+              <p class="text-muted">Admin login required to manage scores and players.</p>
+              <button class="btn-secondary btn-full" onclick="openAuthModal()">🔐 ADMIN LOGIN</button>
+            </div>
+
+            <!-- Shown when logged in as admin -->
+            <div id="admin-match-panel" class="hidden">
+              <div class="admin-header-bar">
+                <span class="admin-badge">✔ ADMIN ACTIVE</span>
+              </div>
+
+              <h3 class="section-title">UPDATE MATCH SCORE</h3>
+
+              <div class="form-group">
+                <label class="form-label">PLAYER A</label>
+                <select id="player-a-select" class="form-input form-select">
+                  <option value="">— Select Player —</option>
+                </select>
+              </div>
+
+              <div class="vs-divider"><span>VS</span></div>
+
+              <div class="form-group">
+                <label class="form-label">PLAYER B</label>
+                <select id="player-b-select" class="form-input form-select">
+                  <option value="">— Select Player —</option>
+                </select>
+              </div>
+
+              <div class="score-inputs">
+                <div class="form-group">
+                  <label class="form-label">GOALS A</label>
+                  <input type="number" id="goals-a-input" class="form-input score-input" min="0" max="99" value="0" placeholder="0" />
+                </div>
+                <div class="score-colon">:</div>
+                <div class="form-group">
+                  <label class="form-label">GOALS B</label>
+                  <input type="number" id="goals-b-input" class="form-input score-input" min="0" max="99" value="0" placeholder="0" />
+                </div>
+              </div>
+
+              <button class="btn-primary btn-full" onclick="submitMatchResult()">
+                ⚡ SUBMIT RESULT
+              </button>
+              <div id="match-msg" class="form-msg hidden"></div>
+            </div>
+          </div>
+        </div>
+
+      </aside>
+
+      <!-- RIGHT COLUMN: Leaderboard -->
+      <main class="main-panel">
+        <div class="card glass-card leaderboard-card">
+          <div class="leaderboard-header">
+            <div class="leaderboard-title-group">
+              <h2 class="leaderboard-title">🏆 LIVE LEADERBOARD</h2>
+              <p class="leaderboard-subtitle">Updated in real-time • Sorted by Goals → Goal Difference → Points</p>
+            </div>
+            <div class="live-indicator">
+              <div class="pulse-dot"></div>
+              <span>LIVE</span>
+            </div>
+          </div>
+
+          <div class="leaderboard-table-wrap">
+            <table class="leaderboard-table">
+              <thead>
+                <tr>
+                  <th class="col-rank">#</th>
+                  <th class="col-player">PLAYER</th>
+                  <th class="col-stat">MP</th>
+                  <th class="col-stat">G</th>
+                  <th class="col-stat">GD</th>
+                  <th class="col-stat">PTS</th>
+                  <th class="col-actions" id="col-delete-header"></th>
+                </tr>
+              </thead>
+              <tbody id="leaderboard-body">
+                <tr class="loading-row">
+                  <td colspan="7">
+                    <div class="loading-spinner">
+                      <div class="spinner"></div>
+                      <span>LOADING ARENA DATA...</span>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </main>
+
+    </div><!-- /app-grid -->
+
+    <!-- FOOTER -->
+    <footer class="app-footer">
+      <div class="footer-content">
+        <span class="footer-logo">O BLOCK <span class="accent">E FOOTBALL</span></span>
+        <span class="footer-sep">|</span>
+        <span class="footer-text">Real-Time Esports Arena © 2025</span>
+        <span class="footer-sep">|</span>
+        <span class="footer-text">Powered by Firebase</span>
+      </div>
+    </footer>
+
+  </div><!-- /main-app -->
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <!--  AUTH MODAL                                    -->
+  <!-- ═══════════════════════════════════════════════ -->
+  <div id="auth-modal" class="modal-overlay hidden" onclick="closeModalOnOverlay(event)">
+    <div class="modal-box glass-card">
+      <button class="modal-close" onclick="closeAuthModal()">✕</button>
+      <div class="modal-header">
+        <div class="modal-icon">🛡️</div>
+        <h2 class="modal-title">ADMIN LOGIN</h2>
+        <p class="modal-subtitle">Restricted Access — Authorized Personnel Only</p>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">EMAIL ADDRESS</label>
+          <input type="email" id="auth-email" class="form-input" placeholder="admin@domain.com" autocomplete="username" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">PASSWORD</label>
+          <div class="password-wrap">
+            <input type="password" id="auth-password" class="form-input" placeholder="••••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter') loginAdmin()" />
+            <button class="toggle-pw" onclick="togglePassword()" tabindex="-1">👁</button>
+          </div>
+        </div>
+        <button class="btn-primary btn-full" id="btn-login-submit" onclick="loginAdmin()">
+          🔐 AUTHENTICATE
+        </button>
+        <div id="auth-error" class="form-msg form-msg-error hidden"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <!--  CONFIRM DELETE MODAL                          -->
+  <!-- ═══════════════════════════════════════════════ -->
+  <div id="confirm-modal" class="modal-overlay hidden" onclick="closeConfirmOnOverlay(event)">
+    <div class="modal-box modal-box-sm glass-card">
+      <div class="modal-header">
+        <div class="modal-icon">⚠️</div>
+        <h2 class="modal-title">CONFIRM DELETE</h2>
+        <p class="modal-subtitle" id="confirm-msg-text">Are you sure you want to remove this player?</p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-danger" id="btn-confirm-delete" onclick="confirmDelete()">🗑️ DELETE</button>
+        <button class="btn-secondary" onclick="closeConfirmModal()">CANCEL</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <!--  TOAST NOTIFICATION                            -->
+  <!-- ═══════════════════════════════════════════════ -->
+  <div id="toast" class="toast hidden"></div>
+
+  <!-- ═══════════════════════════════════════════════════
+       BACKGROUND MUSIC
+       📁 Put your MP3 at: music/background.mp3
+       Rename the track in script.js → MUSIC_TRACK_NAME
+  ══════════════════════════════════════════════════════ -->
+  <audio id="bg-music" loop preload="auto">
+    <source src="music/background.mp3" type="audio/mpeg" />
+    <source src="music/background.ogg" type="audio/ogg" />
+  </audio>
+
+  <!-- ═══════════════════════════════════════════════════
+       FLOATING MUSIC PLAYER
+       Slides up from bottom-right after ENTER ARENA
+  ══════════════════════════════════════════════════════ -->
+  <div id="music-player" class="music-player hidden">
+
+    <!-- ── Collapsed pill tab (click to expand/collapse) ── -->
+    <div class="mp-pill" id="mp-pill" onclick="toggleMusicPlayer()">
+      <div class="mp-pill-bars" id="mp-pill-bars">
+        <span></span><span></span><span></span><span></span><span></span>
+      </div>
+      <span class="mp-pill-label">NOW PLAYING</span>
+      <span class="mp-pill-chevron" id="mp-chevron">▲</span>
+    </div>
+
+    <!-- ── Expanded panel ── -->
+    <div class="mp-panel" id="mp-panel">
+
+      <!-- Spinning vinyl disc + track meta -->
+      <div class="mp-track-info">
+        <div class="mp-disc" id="mp-disc">
+          <div class="mp-disc-ring"></div>
+          <div class="mp-disc-inner">🎵</div>
+        </div>
+        <div class="mp-meta">
+          <div class="mp-track-name-scroll">
+            <span class="mp-track-name" id="mp-track-name">O BLOCK E FOOTBALL — ARENA THEME</span>
+          </div>
+          <div class="mp-track-sub">BACKGROUND TRACK · LOOPING</div>
+        </div>
+      </div>
+
+      <!-- Seekable progress bar -->
+      <div class="mp-progress-section">
+        <div class="mp-progress-bar" id="mp-progress-bar" onclick="seekMusic(event)" title="Click to seek">
+          <div class="mp-progress-fill" id="mp-progress-fill"></div>
+          <div class="mp-progress-thumb" id="mp-progress-thumb"></div>
+        </div>
+        <div class="mp-time-row">
+          <span id="mp-time-current">0:00</span>
+          <span id="mp-time-total">—:——</span>
+        </div>
+      </div>
+
+      <!-- Controls: mute · play/pause · volume slider -->
+      <div class="mp-controls">
+        <button class="mp-btn mp-btn-mute" id="mp-btn-mute" onclick="toggleMute()" title="Toggle mute">
+          <span id="mp-mute-icon">🔊</span>
+        </button>
+        <button class="mp-btn mp-btn-play" id="mp-btn-play" onclick="togglePlay()" title="Play / Pause">
+          <span id="mp-play-icon">⏸</span>
+        </button>
+        <div class="mp-volume-wrap" title="Volume">
+          <span class="mp-vol-icon">🔈</span>
+          <input
+            type="range" id="mp-volume" class="mp-volume-slider"
+            min="0" max="100" value="60"
+            oninput="setVolume(this.value)"
+          />
+          <span class="mp-vol-icon">🔉</span>
+        </div>
+      </div>
+
+      <!-- CSS-animated frequency visualizer -->
+      <div class="mp-visualizer" id="mp-visualizer">
+        <span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span><span></span>
+      </div>
+
+    </div><!-- /mp-panel -->
+  </div><!-- /music-player -->
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <!--  FIREBASE + SCRIPT                             -->
+  <!-- ═══════════════════════════════════════════════ -->
+  <!-- Firebase v9 Compat (CDN) — Works without bundler -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <script src="script.js"></script>
+
+</body>
+</html>
