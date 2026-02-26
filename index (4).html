@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>O BLOCK E FOOTBALL | Real-Time Esports Arena</title>
+<link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Permanent+Marker&family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #00ff87;
+    --gold: #ffd700;
+    --red: #ff2d55;
+    --dark: #050a0e;
+    --dark2: #0a1520;
+    --dark3: #0f1f2e;
+    --text: #e8f4f8;
+    --muted: #5a7a8a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Barlow', sans-serif;
+    background: var(--dark);
+    color: var(--text);
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  .page {
+    position: fixed;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    opacity: 0;
+    transition: opacity 0.6s ease, transform 0.6s ease;
+    transform: translateY(16px);
+  }
+  .page.active { display: flex; opacity: 1; transform: translateY(0); }
+  .page.exit { opacity: 0; transform: translateY(-16px); pointer-events: none; }
+
+  /* ===== PAGE 1: LANDING ===== */
+  #page-landing {
+    align-items: center;
+    justify-content: center;
+    background: var(--dark);
+    overflow: hidden;
+  }
+
+  .field-bg { position: absolute; inset: 0; background: radial-gradient(ellipse 80% 60% at 50% 100%, rgba(0,255,135,0.07) 0%, transparent 70%); }
+  .field-lines { position: absolute; inset: 0; opacity: 0.03; background-image: repeating-linear-gradient(90deg, #00ff87 0px, #00ff87 1px, transparent 1px, transparent 80px), repeating-linear-gradient(0deg, #00ff87 0px, #00ff87 1px, transparent 1px, transparent 80px); }
+  .spotlight { position: absolute; top: -20%; left: 50%; transform: translateX(-50%); width: 600px; height: 600px; background: radial-gradient(ellipse, rgba(0,255,135,0.12) 0%, transparent 70%); animation: pulseLight 4s ease-in-out infinite; }
+  @keyframes pulseLight { 0%,100%{opacity:.6;transform:translateX(-50%) scale(1)}50%{opacity:1;transform:translateX(-50%) scale(1.1)} }
+
+  .particles { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+  .particle { position: absolute; width: 2px; height: 2px; background: var(--green); border-radius: 50%; animation: floatUp linear infinite; opacity: 0; }
+  @keyframes floatUp { 0%{transform:translateY(100vh);opacity:0}10%{opacity:.6}90%{opacity:.3}100%{transform:translateY(-10vh);opacity:0} }
+
+  .corner { position: absolute; width: 60px; height: 60px; border-color: rgba(0,255,135,0.25); border-style: solid; }
+  .c-tl{top:24px;left:24px;border-width:2px 0 0 2px}
+  .c-tr{top:24px;right:24px;border-width:2px 2px 0 0}
+  .c-bl{bottom:24px;left:24px;border-width:0 0 2px 2px}
+  .c-br{bottom:24px;right:24px;border-width:0 2px 2px 0}
+
+  .live-badge { display:flex;align-items:center;gap:8px;background:rgba(255,45,85,.15);border:1px solid rgba(255,45,85,.4);padding:6px 16px;border-radius:100px;font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:2px;color:#ff6b8a;margin-bottom:28px;position:relative;animation:fadeUp 1s ease .2s both; }
+  .live-dot { width:8px;height:8px;background:var(--red);border-radius:50%;animation:blink 1.2s ease-in-out infinite;box-shadow:0 0 8px var(--red); }
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+  .hero-eyebrow { font-family:'Barlow Condensed',sans-serif;font-size:15px;letter-spacing:6px;color:var(--green);text-transform:uppercase;margin-bottom:10px;position:relative;animation:fadeUp 1s ease .4s both; }
+  .hero-title { font-family:'Permanent Marker',sans-serif;font-size:clamp(52px,10vw,110px);line-height:.95;text-align:center;letter-spacing:3px;position:relative;animation:fadeUp 1s ease .5s both; }
+  .hero-title .t1{display:block;color:var(--text)}
+  .hero-title .t2{display:block;color:var(--green);text-shadow:0 0 60px rgba(0,255,135,.4)}
+  .hero-tagline { font-family:'Barlow Condensed',sans-serif;font-size:clamp(14px,2.5vw,20px);letter-spacing:5px;color:var(--muted);text-transform:uppercase;margin-top:18px;margin-bottom:40px;position:relative;animation:fadeUp 1s ease .7s both; }
+
+  .hero-stats { display:flex;gap:40px;margin-bottom:48px;position:relative;animation:fadeUp 1s ease .9s both; }
+  .hero-stat{text-align:center}
+  .h-num{font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--gold);line-height:1}
+  .h-lbl{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-top:4px}
+  .stat-div{width:1px;background:rgba(255,255,255,.1);align-self:stretch}
+
+  .enter-btn { position:relative;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:4px;color:var(--dark);background:var(--green);border:none;padding:18px 64px;cursor:pointer;clip-path:polygon(12px 0%,100% 0%,calc(100% - 12px) 100%,0% 100%);transition:all .3s ease;animation:fadeUp 1s ease 1.1s both;overflow:hidden; }
+  .enter-btn::before{content:'';position:absolute;inset:0;background:rgba(255,255,255,.2);transform:translateX(-100%);transition:transform .4s ease}
+  .enter-btn:hover::before{transform:translateX(0)}
+  .enter-btn:hover{transform:translateY(-3px);box-shadow:0 10px 40px rgba(0,255,135,.4)}
+
+  @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+  /* ===== SHARED NAVBAR ===== */
+  .navbar { display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:54px;background:rgba(3,2,1,.97);border-bottom:1px solid rgba(255,80,20,.12);flex-shrink:0;position:relative;z-index:2; }
+  .nav-logo { font-family:'Permanent Marker',cursive;font-size:18px;letter-spacing:2px;color:var(--green);cursor:pointer; }
+  .nav-logo span{color:var(--text)}
+  .nav-tabs{display:flex;gap:4px}
+  .nav-tab { font-family:'Barlow Condensed',sans-serif;font-size:12px;letter-spacing:2px;padding:6px 16px;background:transparent;border:1px solid rgba(0,255,135,.15);color:var(--muted);cursor:pointer;text-transform:uppercase;transition:all .2s; }
+  .nav-tab:hover,.nav-tab.on{border-color:var(--green);color:var(--green);background:rgba(0,255,135,.06)}
+  .nav-live{display:flex;align-items:center;gap:8px;font-family:'Barlow Condensed',sans-serif;font-size:12px;letter-spacing:2px;color:var(--red)}
+
+  /* ===== PAGE 2: ARENA ===== */
+
+  /* Star field */
+  .stars-canvas {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Mars horizon glow */
+  .mars-horizon {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 120px;
+    background: linear-gradient(to top, rgba(200,50,10,0.12) 0%, transparent 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Mars dust particles */
+  .dust {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255,120,40,0.4);
+    pointer-events: none;
+    animation: dustFloat linear infinite;
+    z-index: 0;
+  }
+
+  @keyframes dustFloat {
+    0%   { transform: translateX(0) translateY(0); opacity: 0; }
+    10%  { opacity: 0.5; }
+    90%  { opacity: 0.2; }
+    100% { transform: translateX(60px) translateY(-80px); opacity: 0; }
+  }
+
+  /* Leaderboard table on space bg */
+  .lb-table th { background: rgba(2,4,8,0.9); }
+  .lb-table tr:hover td { background: rgba(255,80,20,.06); }
+
+  /* Badge colors - keep green for live */
+  .gcell { color: #ff7a30 !important; text-shadow: 0 0 8px rgba(255,100,20,.4); }
+  .b-red { background:rgba(255,45,85,.15);border:1px solid rgba(255,45,85,.3);color:var(--red) }
+
+  /* Arena panel border mars */
+  .apanel:last-of-type { border-right: none; }
+
+  #page-arena {
+    background: #020408;
+    position: relative;
+  }
+
+  /* Mars/Space atmosphere */
+  #page-arena::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 70% 50% at 50% 0%, rgba(255,80,20,0.13) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 60% at 90% 50%, rgba(180,40,255,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 40% at 10% 60%, rgba(255,120,0,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse 80% 30% at 50% 100%, rgba(200,60,10,0.1) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+    animation: auroraShift 12s ease-in-out infinite alternate;
+  }
+
+  #page-arena::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(1px 1px at var(--x,50%) var(--y,50%), rgba(255,255,255,0.8) 0%, transparent 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  @keyframes auroraShift {
+    0%   { opacity: 0.7; transform: scale(1); }
+    50%  { opacity: 1;   transform: scale(1.04); }
+    100% { opacity: 0.8; transform: scale(1.01); }
+  }
+
+  .stats-bar { display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,80,20,.08);border-bottom:1px solid rgba(255,80,20,.15);flex-shrink:0;position:relative;z-index:1; }
+  .sbar-item { padding:8px 20px;background:rgba(15,6,2,0.85); }
+  .sbar-num{font-family:'Bebas Neue',sans-serif;font-size:26px;color:#ff6a20;line-height:1;text-shadow:0 0 12px rgba(255,100,20,.5)}
+  .sbar-lbl{font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase}
+
+  .arena-grid { flex:1;display:grid;grid-template-columns:1fr 1fr 300px;overflow:hidden;position:relative;z-index:1; }
+
+  .apanel { padding:18px 22px;border-right:1px solid rgba(255,120,40,.1);display:flex;flex-direction:column;overflow:hidden;background:rgba(2,4,8,0.6);backdrop-filter:blur(12px); }
+  .ptitle { font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--text);margin-bottom:3px;display:flex;align-items:center;gap:8px;flex-shrink:0; }
+  .psub { font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:14px;flex-shrink:0; }
+
+  .badge{font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:2px;padding:2px 8px;border-radius:100px;text-transform:uppercase}
+  .b-red{background:rgba(255,45,85,.15);border:1px solid rgba(255,45,85,.3);color:var(--red)}
+  .b-grn{background:rgba(0,255,135,.1);border:1px solid rgba(0,255,135,.2);color:var(--green)}
+
+  .scroll-wrap { flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(0,255,135,.2) transparent; }
+
+  .lb-table{width:100%;border-collapse:collapse}
+  .lb-table th{font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;padding:5px 9px;border-bottom:1px solid rgba(255,255,255,.05);text-align:left;position:sticky;top:0;background:var(--dark)}
+  .lb-table th:not(:first-child):not(:nth-child(2)){text-align:center}
+  .lb-table td{padding:10px 9px;border-bottom:1px solid rgba(255,255,255,.03);font-size:13px;transition:background .15s}
+  .lb-table td:not(:first-child):not(:nth-child(2)){text-align:center}
+  .lb-table tr:hover td{background:rgba(0,255,135,.04)}
+  .rnk{font-family:'Bebas Neue',sans-serif;font-size:17px;color:var(--muted);width:28px}
+  .rnk.g{color:var(--gold)}.rnk.s{color:#c0c0c0}.rnk.b{color:#cd7f32}
+  .pname{font-weight:500}
+  .gcell{font-family:'Bebas Neue',sans-serif;font-size:17px;color:var(--green)}
+  .pcell{font-family:'Bebas Neue',sans-serif;font-size:17px;color:var(--gold)}
+
+  .empty{text-align:center;padding:36px 16px;font-family:'Barlow Condensed',sans-serif;font-size:12px;letter-spacing:2px;color:var(--muted);text-transform:uppercase}
+
+  .match-item{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);margin-bottom:5px}
+  .mscore{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--green);letter-spacing:2px;text-align:center;min-width:46px}
+  .mplayer{font-size:12px;flex:1}
+  .mplayer.r{text-align:right}
+
+  .reg-panel{background:rgba(12,5,2,0.75);backdrop-filter:blur(16px);border-left:1px solid rgba(255,100,30,.1);display:flex;flex-direction:column;overflow:hidden}
+  .reg-top{padding:18px;border-bottom:1px solid rgba(255,255,255,.05);flex-shrink:0}
+  .form-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:5px}
+  .form-input{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:var(--text);font-family:'Barlow',sans-serif;font-size:13px;padding:8px 11px;outline:none;transition:border-color .2s;margin-bottom:9px}
+  .form-input:focus{border-color:rgba(0,255,135,.4)}
+  .btn-grn{width:100%;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:3px;padding:11px;background:var(--green);color:var(--dark);border:none;cursor:pointer;clip-path:polygon(7px 0%,100% 0%,calc(100% - 7px) 100%,0% 100%);transition:all .2s}
+  .btn-grn:hover{background:#00e878;transform:translateY(-1px)}
+
+  .plist-wrap{flex:1;overflow-y:auto;padding:12px;scrollbar-width:thin;scrollbar-color:rgba(0,255,135,.2) transparent}
+  .pitem{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.04);margin-bottom:4px}
+  .pitem-name{font-size:13px;font-weight:500}
+  .pitem-stats{font-family:'Barlow Condensed',sans-serif;font-size:11px;color:var(--muted);letter-spacing:1px}
+
+  .ticker{background:rgba(255,70,10,.05);border-top:1px solid rgba(255,80,20,.12);padding:7px 0;overflow:hidden;white-space:nowrap;flex-shrink:0;position:relative;z-index:1}
+  .ticker-inner{display:inline-block;animation:tickerMove 35s linear infinite;font-family:'Barlow Condensed',sans-serif;font-size:12px;letter-spacing:2px;color:#ff7030;text-transform:uppercase;text-shadow:0 0 10px rgba(255,100,30,.4)}
+  @keyframes tickerMove{from{transform:translateX(100vw)}to{transform:translateX(-100%)}}
+
+  /* ===== PAGE 3: ADMIN ===== */
+  #page-admin{background:var(--dark)}
+
+  .admin-grid{flex:1;display:grid;grid-template-columns:1fr 1fr;overflow:hidden}
+
+  .admin-left{padding:28px;display:flex;flex-direction:column;overflow:hidden;border-right:1px solid rgba(255,255,255,.05)}
+  .admin-right{background:var(--dark2);padding:28px;display:flex;flex-direction:column;overflow:hidden}
+
+  /* Login card */
+  .login-wrap{flex:1;display:flex;align-items:center;justify-content:center}
+  .login-card{background:var(--dark2);border:1px solid rgba(0,255,135,.12);padding:40px;width:100%;max-width:380px}
+  .ltitle{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:2px;margin-bottom:4px}
+  .lsub{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:26px}
+  .inp-wrap{position:relative;margin-bottom:12px}
+  .inp-wrap .form-input{margin-bottom:0;padding-right:40px}
+  .tog-pass{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px}
+
+  /* Admin active */
+  .admin-active-view{display:none;flex-direction:column;height:100%;overflow:hidden}
+  .admin-topbar{display:flex;align-items:center;justify-content:space-between;padding-bottom:14px;margin-bottom:18px;border-bottom:1px solid rgba(0,255,135,.1);flex-shrink:0}
+  .admin-who{display:flex;align-items:center;gap:8px;font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:2px;color:var(--green);text-transform:uppercase}
+  .btn-logout{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2px;padding:6px 14px;background:transparent;border:1px solid rgba(255,45,85,.3);color:var(--red);cursor:pointer;text-transform:uppercase;transition:all .2s}
+  .btn-logout:hover{background:rgba(255,45,85,.1)}
+
+  /* Match form */
+  .match-form-wrap{flex:1;overflow-y:auto}
+  .vs-row{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:end;margin-bottom:14px}
+  .vs-txt{font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--muted);text-align:center;padding-bottom:8px}
+  .form-select{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:var(--text);font-family:'Barlow',sans-serif;font-size:13px;padding:8px 11px;outline:none;transition:border-color .2s}
+  .form-select:focus{border-color:rgba(0,255,135,.4)}
+  .form-select option{background:var(--dark2)}
+  .score-row{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;margin-bottom:14px}
+  .score-inp{font-family:'Bebas Neue',sans-serif;font-size:40px;text-align:center;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:var(--green);padding:10px;outline:none;width:100%}
+  .scolon{font-family:'Bebas Neue',sans-serif;font-size:40px;color:var(--muted);text-align:center}
+
+  .del-btn{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:1px;padding:4px 10px;background:transparent;border:1px solid rgba(255,45,85,.3);color:var(--red);cursor:pointer;transition:all .2s}
+  .del-btn:hover{background:rgba(255,45,85,.15)}
+
+  /* Modal */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:999;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+  .modal-overlay.open{display:flex;animation:mfade .2s ease}
+  @keyframes mfade{from{opacity:0}to{opacity:1}}
+  .modal{background:var(--dark2);border:1px solid rgba(255,45,85,.2);padding:36px;width:90%;max-width:360px;animation:mslide .3s ease}
+  @keyframes mslide{from{opacity:0;transform:scale(.96) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+  .modal-title{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;color:var(--red);margin-bottom:8px}
+  .modal-desc{font-size:13px;color:var(--muted);margin-bottom:24px}
+  .modal-acts{display:flex;gap:10px}
+  .btn-cancel{flex:1;font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:2px;padding:11px;background:transparent;border:1px solid rgba(255,255,255,.1);color:var(--muted);cursor:pointer;text-transform:uppercase}
+  .btn-del{flex:1;font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:2px;padding:11px;background:var(--red);border:none;color:white;cursor:pointer;text-transform:uppercase}
+
+  .toast{position:fixed;bottom:28px;right:28px;background:var(--dark3);border:1px solid rgba(0,255,135,.3);padding:12px 18px;font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:1px;color:var(--green);z-index:9999;transform:translateX(120%);transition:transform .4s ease}
+  .toast.show{transform:translateX(0)}
+  .toast.err{border-color:rgba(255,45,85,.3);color:var(--red)}
+</style>
+</head>
+<body>
+
+<!-- PAGE 1: LANDING -->
+<div class="page active" id="page-landing">
+  <div class="field-bg"></div>
+  <div class="field-lines"></div>
+  <div class="spotlight"></div>
+  <div class="particles" id="particles"></div>
+  <div class="corner c-tl"></div><div class="corner c-tr"></div>
+  <div class="corner c-bl"></div><div class="corner c-br"></div>
+
+  <div class="live-badge"><div class="live-dot"></div> SEASON 2025 · LIVE NOW</div>
+  <p class="hero-eyebrow">⚽ Real-Time Esports Arena</p>
+  <h1 class="hero-title"><span class="t1">O BLOCK</span><span class="t2">FOOTBALL</span></h1>
+  <p class="hero-tagline">Compete · Dominate · Conquer</p>
+
+  <div class="hero-stats">
+    <div class="hero-stat"><div class="h-num" id="l-p">0</div><div class="h-lbl">Players</div></div>
+    <div class="stat-div"></div>
+    <div class="hero-stat"><div class="h-num" id="l-m">0</div><div class="h-lbl">Matches</div></div>
+    <div class="stat-div"></div>
+    <div class="hero-stat"><div class="h-num" id="l-g">0</div><div class="h-lbl">Goals</div></div>
+  </div>
+
+  <button class="enter-btn" onclick="goTo('arena')">⚡ ENTER ARENA</button>
+</div>
+
+<!-- PAGE 2: ARENA -->
+<!-- Stars injected by script -->
+<div class="page" id="page-arena">
+  <nav class="navbar">
+    <div class="nav-logo" onclick="goTo('landing')"><span>O BLOCK</span> E FOOTBALL</div>
+    <div class="nav-tabs">
+      <button class="nav-tab on">⚽ ARENA</button>
+      <button class="nav-tab" onclick="goTo('admin')">🛡️ ADMIN</button>
+    </div>
+    <div class="nav-live"><div class="live-dot"></div> LIVE</div>
+  </nav>
+
+  <div class="stats-bar">
+    <div class="sbar-item"><div class="sbar-num" id="a-p">0</div><div class="sbar-lbl">Players</div></div>
+    <div class="sbar-item"><div class="sbar-num" id="a-m">0</div><div class="sbar-lbl">Matches</div></div>
+    <div class="sbar-item"><div class="sbar-num" id="a-g">0</div><div class="sbar-lbl">Goals</div></div>
+  </div>
+
+  <div class="arena-grid">
+    <!-- Leaderboard -->
+    <div class="apanel">
+      <div class="ptitle">🏆 LEADERBOARD <span class="badge b-red">Live</span></div>
+      <div class="psub">Goals · GD · Points</div>
+      <div class="scroll-wrap">
+        <table class="lb-table">
+          <thead><tr><th>#</th><th>Player</th><th>M</th><th>G</th><th>GD</th><th>PTS</th></tr></thead>
+          <tbody id="lb-body"><tr><td colspan="6"><div class="empty">Register players to see rankings</div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Recent Matches -->
+    <div class="apanel">
+      <div class="ptitle">⚡ RECENT MATCHES</div>
+      <div class="psub">Latest results</div>
+      <div class="scroll-wrap" id="matches-list">
+        <div class="empty">No matches played yet</div>
+      </div>
+    </div>
+
+    <!-- Register + Players -->
+    <div class="reg-panel">
+      <div class="reg-top">
+        <div class="ptitle" style="margin-bottom:12px;font-size:17px;">JOIN THE ARENA</div>
+        <label class="form-label">Full Name</label>
+        <input type="text" class="form-input" id="reg-name" placeholder="Enter your name...">
+        <button class="btn-grn" onclick="registerPlayer()">⚡ REGISTER PLAYER</button>
+      </div>
+      <div style="padding:10px 14px 7px;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,.05)">
+        <div class="ptitle" style="font-size:16px;">PLAYERS <span class="badge b-grn" id="p-cnt">0</span></div>
+      </div>
+      <div class="plist-wrap"><div id="p-list"><div class="empty">No players yet</div></div></div>
+    </div>
+  </div>
+
+  <div class="ticker"><span class="ticker-inner" id="ticker-txt">⚡ LIVE SCORES UPDATING IN REAL TIME &nbsp;&nbsp;&nbsp; 🏆 O BLOCK E FOOTBALL ARENA &nbsp;&nbsp;&nbsp; 🔥 SEASON 2025 IS LIVE &nbsp;&nbsp;&nbsp; ⚽ REGISTER NOW TO COMPETE &nbsp;&nbsp;&nbsp;</span></div>
+</div>
+
+<!-- PAGE 3: ADMIN -->
+<div class="page" id="page-admin">
+  <nav class="navbar">
+    <div class="nav-logo" onclick="goTo('landing')"><span>O BLOCK</span> E FOOTBALL</div>
+    <div class="nav-tabs">
+      <button class="nav-tab" onclick="goTo('arena')">⚽ ARENA</button>
+      <button class="nav-tab on">🛡️ ADMIN</button>
+    </div>
+    <div class="nav-live"><div class="live-dot"></div> LIVE</div>
+  </nav>
+
+  <div class="admin-grid">
+
+    <!-- Left: Login / Match form -->
+    <div class="admin-left">
+
+      <!-- LOGIN -->
+      <div class="login-wrap" id="login-screen">
+        <div class="login-card">
+          <div class="ltitle">🛡️ ADMIN LOGIN</div>
+          <div class="lsub">Restricted Access — Authorized Only</div>
+          <label class="form-label">Email Address</label>
+          <input type="email" class="form-input" id="a-email" placeholder="your@email.com">
+          <label class="form-label">Password</label>
+          <div class="inp-wrap">
+            <input type="password" class="form-input" id="a-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+            <button class="tog-pass" onclick="togglePass()">👁</button>
+          </div>
+          <button class="btn-grn" style="margin-top:6px" onclick="doLogin()">🔐 AUTHENTICATE</button>
+        </div>
+      </div>
+
+      <!-- ADMIN ACTIVE -->
+      <div id="admin-view" class="admin-active-view">
+        <div class="admin-topbar">
+          <div class="admin-who"><div class="live-dot"></div> Admin Active</div>
+          <button class="btn-logout" onclick="doLogout()">LOGOUT</button>
+        </div>
+        <div class="ptitle" style="margin-bottom:3px">UPDATE MATCH SCORE</div>
+        <div class="psub">Select players and enter goals scored</div>
+        <div class="match-form-wrap">
+          <div class="vs-row">
+            <div><label class="form-label">Player A</label><select class="form-select" id="pA"></select></div>
+            <div class="vs-txt">VS</div>
+            <div><label class="form-label">Player B</label><select class="form-select" id="pB"></select></div>
+          </div>
+          <div class="score-row">
+            <input type="number" class="score-inp" id="gA" value="0" min="0">
+            <div class="scolon">:</div>
+            <input type="number" class="score-inp" id="gB" value="0" min="0">
+          </div>
+          <button class="btn-grn" onclick="submitResult()">⚡ SUBMIT RESULT</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right: Player management -->
+    <div class="admin-right">
+      <div class="ptitle" style="margin-bottom:3px">PLAYER MANAGEMENT</div>
+      <div class="psub">View and remove players</div>
+      <div class="scroll-wrap" id="admin-plist">
+        <div class="empty">No players registered</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Confirm delete modal -->
+<div class="modal-overlay" id="del-modal">
+  <div class="modal">
+    <div class="modal-title">⚠️ CONFIRM DELETE</div>
+    <div class="modal-desc" id="del-desc">Remove this player?</div>
+    <div class="modal-acts">
+      <button class="btn-cancel" onclick="closeConfirm()">CANCEL</button>
+      <button class="btn-del" onclick="confirmDelete()">🗑️ DELETE</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span id="toast-msg"></span></div>
+
+<script>
+let players = JSON.parse(localStorage.getItem('oblock_players')||'[]');
+let matches = JSON.parse(localStorage.getItem('oblock_matches')||'[]');
+let isAdmin = false;
+let delTarget = null;
+
+// Navigation
+function goTo(p) {
+  const cur = document.querySelector('.page.active');
+  const nxt = document.getElementById('page-' + p);
+  if (!nxt || cur === nxt) return;
+  cur.classList.add('exit');
+  setTimeout(() => {
+    cur.classList.remove('active','exit');
+    nxt.classList.add('active');
+    if (p === 'arena') renderArena();
+    if (p === 'admin') renderAdmin();
+    if (p === 'landing') animateLanding();
+  }, 400);
+}
+
+// Particles
+function initParticles() {
+  const c = document.getElementById('particles');
+  for (let i = 0; i < 18; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = Math.random()*100+'%';
+    p.style.animationDuration = (7+Math.random()*10)+'s';
+    p.style.animationDelay = (Math.random()*8)+'s';
+    const s = (1+Math.random()*2)+'px';
+    p.style.width = p.style.height = s;
+    c.appendChild(p);
+  }
+}
+
+function animCount(el, target) {
+  let v = 0;
+  const step = Math.max(1, Math.ceil(target/40));
+  const t = setInterval(() => { v = Math.min(v+step, target); el.textContent = v; if (v >= target) clearInterval(t); }, 30);
+}
+
+function animateLanding() {
+  const g = players.reduce((s,p) => s+(p.goals||0), 0);
+  setTimeout(() => animCount(document.getElementById('l-p'), players.length), 300);
+  setTimeout(() => animCount(document.getElementById('l-m'), matches.length), 500);
+  setTimeout(() => animCount(document.getElementById('l-g'), g), 700);
+}
+
+// Register
+function registerPlayer() {
+  const name = document.getElementById('reg-name').value.trim();
+  if (!name) return toast('Enter a player name', true);
+  if (players.find(p => p.name.toLowerCase() === name.toLowerCase())) return toast('Player already exists', true);
+  players.push({ name, matches:0, goals:0, goalsFor:0, goalsAgainst:0, points:0 });
+  save(); document.getElementById('reg-name').value = '';
+  renderArena(); renderAdmin();
+  toast('⚡ ' + name + ' joined the arena!');
+}
+
+function sorted() {
+  return [...players].sort((a,b) => {
+    if ((b.goals||0) !== (a.goals||0)) return (b.goals||0)-(a.goals||0);
+    const ga=(a.goalsFor||0)-(a.goalsAgainst||0), gb=(b.goalsFor||0)-(b.goalsAgainst||0);
+    if (gb !== ga) return gb-ga;
+    return (b.points||0)-(a.points||0);
+  });
+}
+
+function renderArena() {
+  const g = players.reduce((s,p) => s+(p.goals||0), 0);
+  document.getElementById('a-p').textContent = players.length;
+  document.getElementById('a-m').textContent = matches.length;
+  document.getElementById('a-g').textContent = g;
+
+  // Leaderboard
+  const tbody = document.getElementById('lb-body');
+  if (!players.length) {
+    tbody.innerHTML = '<tr><td colspan="6"><div class="empty">Register players to see rankings</div></td></tr>';
+  } else {
+    tbody.innerHTML = sorted().map((p,i) => {
+      const rc = i===0?'g':i===1?'s':i===2?'b':'';
+      const gd = (p.goalsFor||0)-(p.goalsAgainst||0);
+      return `<tr><td class="rnk ${rc}">${i+1}</td><td class="pname">${p.name}</td><td>${p.matches||0}</td><td class="gcell">${p.goals||0}</td><td style="color:var(--muted);font-family:'Barlow Condensed';font-size:12px">${gd>0?'+'+gd:gd}</td><td class="pcell">${p.points||0}</td></tr>`;
+    }).join('');
+  }
+
+  // Matches
+  const ml = document.getElementById('matches-list');
+  if (!matches.length) { ml.innerHTML = '<div class="empty">No matches played yet</div>'; }
+  else { ml.innerHTML = [...matches].reverse().slice(0,20).map(m => `<div class="match-item"><div class="mplayer">${m.playerA}</div><div class="mscore">${m.goalsA}—${m.goalsB}</div><div class="mplayer r">${m.playerB}</div></div>`).join(''); }
+
+  // Players
+  document.getElementById('p-cnt').textContent = players.length;
+  const pl = document.getElementById('p-list');
+  if (!players.length) { pl.innerHTML = '<div class="empty">No players yet</div>'; }
+  else { pl.innerHTML = players.map(p => `<div class="pitem"><div><div class="pitem-name">${p.name}</div><div class="pitem-stats">${p.matches||0} M · ${p.goals||0} G · ${p.points||0} PTS</div></div></div>`).join(''); }
+
+  // Ticker
+  if (players.length > 0) {
+    const top = sorted()[0];
+    document.getElementById('ticker-txt').textContent = `⚡ LIVE SCORES UPDATING   🏆 LEADER: ${top.name.toUpperCase()} — ${top.goals||0} GOALS   🔥 SEASON 2025 IS LIVE   ⚽ REGISTER NOW   🏅 CLAIM YOUR GLORY   `;
+  }
+}
+
+function renderAdmin() {
+  const opts = players.map((p,i) => `<option value="${i}">${p.name}</option>`).join('');
+  const blank = '<option value="">— Select Player —</option>';
+  document.getElementById('pA').innerHTML = blank + opts;
+  document.getElementById('pB').innerHTML = blank + opts;
+
+  const apl = document.getElementById('admin-plist');
+  if (!players.length) { apl.innerHTML = '<div class="empty">No players registered</div>'; return; }
+  apl.innerHTML = players.map((p,i) => `
+    <div class="pitem">
+      <div><div class="pitem-name">${p.name}</div><div class="pitem-stats">${p.matches||0} M · ${p.goals||0} G · ${p.points||0} PTS</div></div>
+      ${isAdmin ? `<button class="del-btn" onclick="askDelete(${i})">REMOVE</button>` : '<span style="font-family:\'Barlow Condensed\';font-size:10px;color:var(--muted);letter-spacing:1px">LOGIN TO MANAGE</span>'}
+    </div>
+  `).join('');
+}
+
+function submitResult() {
+  const iA = document.getElementById('pA').value;
+  const iB = document.getElementById('pB').value;
+  const gA = parseInt(document.getElementById('gA').value)||0;
+  const gB = parseInt(document.getElementById('gB').value)||0;
+  if (!iA||!iB) return toast('Select both players', true);
+  if (iA===iB) return toast('Select different players', true);
+  const pA = players[iA], pB = players[iB];
+  pA.matches=(pA.matches||0)+1; pB.matches=(pB.matches||0)+1;
+  pA.goals=(pA.goals||0)+gA; pB.goals=(pB.goals||0)+gB;
+  pA.goalsFor=(pA.goalsFor||0)+gA; pB.goalsFor=(pB.goalsFor||0)+gB;
+  pA.goalsAgainst=(pA.goalsAgainst||0)+gB; pB.goalsAgainst=(pB.goalsAgainst||0)+gA;
+  if (gA>gB) pA.points=(pA.points||0)+3;
+  else if (gB>gA) pB.points=(pB.points||0)+3;
+  else { pA.points=(pA.points||0)+1; pB.points=(pB.points||0)+1; }
+  matches.push({ playerA:pA.name, playerB:pB.name, goalsA:gA, goalsB:gB });
+  save();
+  document.getElementById('gA').value=0; document.getElementById('gB').value=0;
+  renderAdmin();
+  toast(`✓ ${pA.name} ${gA} — ${gB} ${pB.name}`);
+}
+
+function doLogin() {
+  const e = document.getElementById('a-email').value;
+  const p = document.getElementById('a-pass').value;
+  if (e==='kipkiruileonard20@gmail.com' && p==='Leon123#') {
+    isAdmin = true;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('admin-view').style.display = 'flex';
+    renderAdmin(); toast('🛡️ Admin access granted');
+  } else toast('Invalid credentials', true);
+}
+
+function doLogout() {
+  isAdmin = false;
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('admin-view').style.display = 'none';
+  renderAdmin(); toast('Logged out');
+}
+
+function togglePass() {
+  const f = document.getElementById('a-pass');
+  f.type = f.type==='password'?'text':'password';
+}
+
+function askDelete(i) {
+  delTarget = i;
+  document.getElementById('del-desc').textContent = `Remove "${players[i].name}" from the arena? This cannot be undone.`;
+  document.getElementById('del-modal').classList.add('open');
+}
+function closeConfirm() { delTarget=null; document.getElementById('del-modal').classList.remove('open'); }
+function confirmDelete() {
+  if (delTarget===null) return;
+  const name = players[delTarget].name;
+  players.splice(delTarget,1); save(); closeConfirm(); renderAdmin();
+  toast(name+' removed');
+}
+
+document.getElementById('del-modal').addEventListener('click', function(e) { if (e.target===this) closeConfirm(); });
+
+function save() {
+  localStorage.setItem('oblock_players', JSON.stringify(players));
+  localStorage.setItem('oblock_matches', JSON.stringify(matches));
+}
+
+function toast(msg, err=false) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  t.className = 'toast'+(err?' err':'');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+initParticles();
+animateLanding();
+
+function initSpaceArena() {
+  const page = document.getElementById('page-arena');
+  const canvas = document.createElement('canvas');
+  canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;';
+  page.insertBefore(canvas, page.firstChild);
+
+  function resize() {
+    canvas.width = page.offsetWidth;
+    canvas.height = page.offsetHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+  const ctx = canvas.getContext('2d');
+
+  // Stars
+  const stars = Array.from({length:250}, () => ({
+    x: Math.random(), y: Math.random(),
+    r: 0.3 + Math.random() * 1.2,
+    twinkle: Math.random() * Math.PI * 2,
+    speed: 0.01 + Math.random() * 0.02
+  }));
+
+  // Moon (large, top-right area, partially visible)
+  const moon = { x: 0.78, y: 0.18, r: 90 };
+
+  // Landing pads on moon surface line
+  const pads = [
+    { x: 0.15, label: 'PAD A' },
+    { x: 0.50, label: 'PAD B' },
+    { x: 0.82, label: 'PAD C' },
+  ];
+
+  // Rockets
+  function makeRocket(padIndex) {
+    const pad = pads[padIndex];
+    return {
+      padIndex,
+      x: pad.x,
+      startY: -0.12,
+      y: -0.12 - Math.random() * 0.4,
+      targetY: 0.0,  // will be set to ground
+      speed: 0.0008 + Math.random() * 0.0006,
+      landed: false,
+      landedTimer: 0,
+      flame: 1,
+      smoke: [],
+      width: 11,
+      height: 38,
+      glowAlpha: 0,
+    };
+  }
+
+  let rockets = [makeRocket(0), makeRocket(1), makeRocket(2)];
+  rockets[1].y = -0.3;
+  rockets[2].y = -0.55;
+
+  // Exhaust particles
+  function addSmoke(r, cx, cy) {
+    for (let i = 0; i < 3; i++) {
+      r.smoke.push({
+        x: cx + (Math.random()-0.5)*8,
+        y: cy,
+        vx: (Math.random()-0.5)*0.6,
+        vy: 0.4 + Math.random()*0.8,
+        life: 1,
+        size: 3 + Math.random()*5
+      });
+    }
+  }
+
+  function drawRocket(r, W, H) {
+    const groundY = H * 0.88;
+    r.targetY = groundY / H - r.height / H / 2 - 0.01;
+
+    if (!r.landed) {
+      r.y += r.speed;
+      if (r.y >= r.targetY) {
+        r.y = r.targetY;
+        r.landed = true;
+        r.glowAlpha = 1;
+      }
+    } else {
+      r.landedTimer++;
+      if (r.landedTimer > 280) {
+        // Relaunch
+        const pi = r.padIndex;
+        rockets[rockets.indexOf(r)] = makeRocket(pi);
+        return;
+      }
+      r.glowAlpha = Math.max(0, 1 - r.landedTimer / 60);
+    }
+
+    const cx = r.x * W;
+    const cy = r.y * H;
+    const w = r.width, h = r.height;
+
+    // Flame / exhaust
+    if (!r.landed || r.landedTimer < 20) {
+      addSmoke(r, cx, cy + h/2);
+      // Flame
+      const fh = 18 + Math.random()*14;
+      const flameGrad = ctx.createLinearGradient(0, cy+h/2, 0, cy+h/2+fh);
+      flameGrad.addColorStop(0, 'rgba(255,220,60,0.95)');
+      flameGrad.addColorStop(0.4, 'rgba(255,100,20,0.8)');
+      flameGrad.addColorStop(1, 'rgba(255,40,0,0)');
+      ctx.beginPath();
+      ctx.moveTo(cx - w*0.25, cy + h/2);
+      ctx.quadraticCurveTo(cx, cy + h/2 + fh * 0.6, cx, cy + h/2 + fh);
+      ctx.quadraticCurveTo(cx, cy + h/2 + fh * 0.6, cx + w*0.25, cy + h/2);
+      ctx.fillStyle = flameGrad;
+      ctx.fill();
+
+      // Side thrusters (landing legs style)
+      [-1, 1].forEach(side => {
+        const sfh = 8 + Math.random()*6;
+        const sg = ctx.createLinearGradient(0, cy+h*0.35, 0, cy+h*0.35+sfh);
+        sg.addColorStop(0, 'rgba(255,180,60,0.7)');
+        sg.addColorStop(1, 'rgba(255,60,0,0)');
+        ctx.beginPath();
+        ctx.moveTo(cx + side*w*0.5, cy + h*0.35);
+        ctx.lineTo(cx + side*(w*0.5 + w*0.3), cy + h*0.35 + sfh);
+        ctx.lineTo(cx + side*w*0.5, cy + h*0.35 + sfh*0.5);
+        ctx.fillStyle = sg;
+        ctx.fill();
+      });
+    }
+
+    // Smoke particles
+    r.smoke = r.smoke.filter(s => s.life > 0);
+    r.smoke.forEach(s => {
+      s.x += s.vx; s.y += s.vy; s.life -= 0.035; s.size += 0.3;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.size, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(180,140,100,${s.life * 0.18})`;
+      ctx.fill();
+    });
+
+    // Rocket body
+    ctx.save();
+    // Main body
+    const bodyGrad = ctx.createLinearGradient(cx-w/2, 0, cx+w/2, 0);
+    bodyGrad.addColorStop(0, '#b0c8d8');
+    bodyGrad.addColorStop(0.4, '#e8f4f8');
+    bodyGrad.addColorStop(1, '#607080');
+    ctx.fillStyle = bodyGrad;
+    ctx.beginPath();
+    ctx.roundRect(cx - w/2, cy - h/2, w, h * 0.8, [2, 2, 0, 0]);
+    ctx.fill();
+
+    // Nose cone
+    ctx.fillStyle = '#c8dce8';
+    ctx.beginPath();
+    ctx.moveTo(cx - w/2, cy - h/2);
+    ctx.quadraticCurveTo(cx, cy - h/2 - h*0.35, cx, cy - h/2 - h*0.35);
+    ctx.quadraticCurveTo(cx, cy - h/2 - h*0.35, cx + w/2, cy - h/2);
+    ctx.fill();
+
+    // Fins
+    [-1, 1].forEach(side => {
+      ctx.fillStyle = '#8090a0';
+      ctx.beginPath();
+      ctx.moveTo(cx + side * w/2, cy + h*0.25);
+      ctx.lineTo(cx + side * (w/2 + w*0.7), cy + h*0.45);
+      ctx.lineTo(cx + side * w/2, cy + h*0.42);
+      ctx.fill();
+    });
+
+    // Landing legs (deployed near ground)
+    if (r.y > r.targetY - 0.08) {
+      [-1, 1].forEach(side => {
+        ctx.strokeStyle = '#8090a0';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(cx + side * w*0.4, cy + h*0.35);
+        ctx.lineTo(cx + side * (w*0.4 + w*0.9), cy + h/2 + 6);
+        ctx.stroke();
+        // Foot
+        ctx.beginPath();
+        ctx.moveTo(cx + side * (w*0.4 + w*0.5), cy + h/2 + 4);
+        ctx.lineTo(cx + side * (w*0.4 + w*1.2), cy + h/2 + 6);
+        ctx.stroke();
+      });
+    }
+
+    // SpaceX-style grid fins on body
+    ctx.fillStyle = 'rgba(120,160,180,0.5)';
+    [-1, 1].forEach(side => {
+      ctx.fillRect(cx + side*w/2 - (side>0?0:3), cy - h*0.15, 3, 10);
+    });
+
+    // Window
+    ctx.beginPath();
+    ctx.arc(cx, cy - h*0.05, 4, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(150,220,255,0.8)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(100,180,220,0.5)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Landing glow
+    if (r.glowAlpha > 0) {
+      const glGrad = ctx.createRadialGradient(cx, cy+h/2+4, 0, cx, cy+h/2+4, 40);
+      glGrad.addColorStop(0, `rgba(255,150,50,${r.glowAlpha * 0.4})`);
+      glGrad.addColorStop(1, 'rgba(255,100,20,0)');
+      ctx.beginPath();
+      ctx.ellipse(cx, cy+h/2+4, 40, 12, 0, 0, Math.PI*2);
+      ctx.fillStyle = glGrad;
+      ctx.fill();
+    }
+
+    ctx.restore();
+  }
+
+  function draw() {
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    // Deep space background
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
+    bgGrad.addColorStop(0, '#020408');
+    bgGrad.addColorStop(0.6, '#040810');
+    bgGrad.addColorStop(1, '#080412');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, W, H);
+
+    // Nebula clouds
+    const neb1 = ctx.createRadialGradient(W*0.2, H*0.3, 0, W*0.2, H*0.3, W*0.3);
+    neb1.addColorStop(0, 'rgba(100,40,180,0.06)');
+    neb1.addColorStop(1, 'transparent');
+    ctx.fillStyle = neb1; ctx.fillRect(0,0,W,H);
+
+    const neb2 = ctx.createRadialGradient(W*0.75, H*0.2, 0, W*0.75, H*0.2, W*0.25);
+    neb2.addColorStop(0, 'rgba(255,80,20,0.07)');
+    neb2.addColorStop(1, 'transparent');
+    ctx.fillStyle = neb2; ctx.fillRect(0,0,W,H);
+
+    // Stars
+    stars.forEach(s => {
+      s.twinkle += s.speed;
+      const a = 0.3 + Math.abs(Math.sin(s.twinkle)) * 0.7;
+      ctx.beginPath();
+      ctx.arc(s.x*W, s.y*H, s.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(255,240,220,${a})`;
+      ctx.fill();
+    });
+
+    // Moon
+    const mx = moon.x * W, my = moon.y * H, mr = moon.r;
+    const moonGrad = ctx.createRadialGradient(mx-mr*0.3, my-mr*0.3, mr*0.1, mx, my, mr);
+    moonGrad.addColorStop(0, '#e8e0d0');
+    moonGrad.addColorStop(0.6, '#c0b8a8');
+    moonGrad.addColorStop(1, '#908880');
+    ctx.beginPath();
+    ctx.arc(mx, my, mr, 0, Math.PI*2);
+    ctx.fillStyle = moonGrad;
+    ctx.fill();
+    // Moon craters
+    [[0.3, -0.2, 12], [-0.2, 0.3, 8], [0.5, 0.3, 6], [-0.4, -0.1, 15], [0.1, 0.5, 5]].forEach(([dx,dy,cr]) => {
+      ctx.beginPath();
+      ctx.arc(mx+dx*mr, my+dy*mr, cr, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(120,110,100,0.35)';
+      ctx.fill();
+    });
+    // Moon atmosphere glow
+    const moonGlow = ctx.createRadialGradient(mx, my, mr*0.9, mx, my, mr*1.4);
+    moonGlow.addColorStop(0, 'transparent');
+    moonGlow.addColorStop(0.5, 'rgba(200,210,255,0.04)');
+    moonGlow.addColorStop(1, 'transparent');
+    ctx.beginPath();
+    ctx.arc(mx, my, mr*1.4, 0, Math.PI*2);
+    ctx.fillStyle = moonGlow;
+    ctx.fill();
+
+    // Moon surface / ground
+    const groundY = H * 0.88;
+    const groundGrad = ctx.createLinearGradient(0, groundY, 0, H);
+    groundGrad.addColorStop(0, '#1a1008');
+    groundGrad.addColorStop(0.3, '#120c06');
+    groundGrad.addColorStop(1, '#080402');
+    ctx.fillStyle = groundGrad;
+    ctx.beginPath();
+    ctx.moveTo(0, groundY);
+    // Bumpy moon surface
+    let gx = 0;
+    ctx.lineTo(0, groundY + 4);
+    while (gx < W) {
+      gx += 18 + Math.random()*30;
+      ctx.lineTo(gx, groundY + (Math.random()*8 - 2));
+    }
+    ctx.lineTo(W, H); ctx.lineTo(0, H);
+    ctx.fill();
+
+    // Surface rim light
+    const rimGrad = ctx.createLinearGradient(0, groundY-2, 0, groundY+8);
+    rimGrad.addColorStop(0, 'rgba(255,150,50,0.15)');
+    rimGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = rimGrad;
+    ctx.fillRect(0, groundY-2, W, 10);
+
+    // Landing pads
+    pads.forEach(pad => {
+      const px = pad.x * W;
+      // Pad platform
+      ctx.fillStyle = '#303840';
+      ctx.fillRect(px - 22, groundY - 3, 44, 5);
+      // Pad lights
+      [-18, -6, 6, 18].forEach(offset => {
+        ctx.beginPath();
+        ctx.arc(px + offset, groundY - 1, 2, 0, Math.PI*2);
+        ctx.fillStyle = `rgba(255,200,50,${0.4 + Math.sin(Date.now()*0.003 + offset)*0.3})`;
+        ctx.fill();
+      });
+      // Pad label
+      ctx.fillStyle = 'rgba(255,180,80,0.5)';
+      ctx.font = '9px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(pad.label, px, groundY + 16);
+    });
+
+    // Draw rockets
+    rockets.forEach(r => drawRocket(r, W, H));
+
+    // Atmosphere haze at horizon
+    const hazeGrad = ctx.createLinearGradient(0, groundY-60, 0, groundY);
+    hazeGrad.addColorStop(0, 'transparent');
+    hazeGrad.addColorStop(1, 'rgba(255,80,20,0.08)');
+    ctx.fillStyle = hazeGrad;
+    ctx.fillRect(0, groundY-60, W, 60);
+
+    requestAnimationFrame(draw);
+  }
+
+  draw();
+}
+
+initSpaceArena();
+
+</script>
+</body>
+</html>
